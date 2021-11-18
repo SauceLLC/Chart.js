@@ -1,12 +1,17 @@
 'use strict';
 
-var helpers = require('./helpers.core');
+const PI = Math.PI;
+const TAU = 2 * PI;
+const PITAU = TAU + PI;
 
 /**
  * @alias Chart.helpers.math
  * @namespace
  */
 var exports = {
+    PI,
+    TAU,
+
 	/**
 	 * Returns an array of factors sorted from 1 to sqrt(value)
 	 * @private
@@ -40,7 +45,24 @@ var exports = {
 		var isPowerOf10 = x === Math.pow(10, powerOf10);
 
 		return isPowerOf10 ? powerOf10 : exponent;
-	}
+	},
+
+    _angleDiff: (a, b) => (a - b + PITAU) % TAU - PI,
+
+    _normalizeAngle: a => (a % TAU + TAU) % TAU,
+
+    _angleBetween: (angle, start, end, sameAngleIsFullCircle) => {
+        const a = exports._normalizeAngle(angle);
+        const s = exports._normalizeAngle(start);
+        const e = exports._normalizeAngle(end);
+        const angleToStart = exports._normalizeAngle(s - a);
+        const angleToEnd = exports._normalizeAngle(e - a);
+        const startToAngle = exports._normalizeAngle(a - s);
+        const endToAngle = exports._normalizeAngle(a - e);
+        return a === s || a === e || (sameAngleIsFullCircle && s === e)
+            || (angleToStart > angleToEnd && startToAngle < endToAngle);
+    },
+
 };
 
 module.exports = exports;
@@ -48,10 +70,9 @@ module.exports = exports;
 // DEPRECATIONS
 
 /**
- * Provided for backward compatibility, use Chart.helpers.math.log10 instead.
  * @namespace Chart.helpers.log10
  * @deprecated since version 2.9.0
  * @todo remove at version 3
  * @private
  */
-helpers.log10 = exports.log10;
+require('./helpers.core').log10 = exports.log10;
