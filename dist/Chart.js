@@ -2335,7 +2335,7 @@ var helpers = {
 
 		if (helpers.isObject(tval) && helpers.isObject(sval)) {
 			helpers.mergeIf(tval, sval);
-		} else if (!target.hasOwnProperty(key)) {
+		} else if (!Object.prototype.hasOwnProperty.call(target, key)) {
 			target[key] = helpers.clone(sval);
 		}
 	},
@@ -2407,7 +2407,7 @@ var helpers = {
 	 */
 	inherits: function(extensions) {
 		var me = this;
-		var ChartElement = (extensions && extensions.hasOwnProperty('constructor')) ? extensions.constructor : function() {
+		var ChartElement = (extensions && Object.prototype.hasOwnProperty.call(extensions, 'constructor')) ? extensions.constructor : function() {
 			return me.apply(this, arguments);
 		};
 
@@ -3499,46 +3499,43 @@ var helpers_rtl = {
 	restoreTextDirection: restoreTextDirection,
 };
 
+// vim: ts=2:sw=2:expandtab
+
 /**
  * Backport from 3.6
  * @namespace Chart.helpers.interpolation
  */
 
-const interpolation = {
-  /**
-   * @private
-   */
-  _pointInLine: (p1, p2, t, mode) => ({ // eslint-disable-line no-unused-vars
+function _pointInLine(p1, p2, t, mode) { // eslint-disable-line no-unused-vars
+  return {
     x: p1.x + t * (p2.x - p1.x),
     y: p1.y + t * (p2.y - p1.y)
-  }),
+  };
+}
 
-  /**
-   * @private
-   */
-  _steppedInterpolation: (p1, p2, t, mode) => ({
+function _steppedInterpolation(p1, p2, t, mode) {
+  return {
     x: p1.x + t * (p2.x - p1.x),
     y: mode === 'middle' ? t < 0.5 ? p1.y : p2.y :
        mode === 'after' ? t < 1 ? p1.y : p2.y : t > 0 ? p2.y : p1.y
-  }),
+  };
+}
 
-  /**
-   * @private
-   */
-  _bezierInterpolation: (p1, p2, t, mode) => { // eslint-disable-line no-unused-vars
-    const cp1 = {x: p1.cp2x, y: p1.cp2y};
-    const cp2 = {x: p2.cp1x, y: p2.cp1y};
-    const a = _pointInLine(p1, cp1, t);
-    const b = _pointInLine(cp1, cp2, t);
-    const c = _pointInLine(cp2, p2, t);
-    const d = _pointInLine(a, b, t);
-    const e = _pointInLine(b, c, t);
-    return _pointInLine(d, e, t);
-  }
-};
+function _bezierInterpolation(p1, p2, t, mode) {
+  const cp1 = {x: p1.cp2x, y: p1.cp2y};
+  const cp2 = {x: p2.cp1x, y: p2.cp1y};
+  const a = _pointInLine(p1, cp1, t);
+  const b = _pointInLine(cp1, cp2, t);
+  const c = _pointInLine(cp2, p2, t);
+  const d = _pointInLine(a, b, t);
+  const e = _pointInLine(b, c, t);
+  return _pointInLine(d, e, t);
+}
 
 var helpers_interpolation = {
-    interpolation
+  _pointInLine,
+  _steppedInterpolation,
+  _bezierInterpolation,
 };
 
 const {_angleBetween, _angleDiff, _normalizeAngle} = helpers_math;
@@ -3778,7 +3775,8 @@ function solidSegments(points, start, max, loop) {
  * @private
  */
 function _computeSegments(line, segmentOptions) {
-  const points = line.getPoints();  const spanGaps = line._scale.options.spanGaps;
+  const points = line.getPoints();
+  const spanGaps = line._scale.options.spanGaps;
   const count = points.length;
 
   if (!count) {
@@ -3904,7 +3902,7 @@ var curve = helpers_curve;
 var options = helpers_options;
 var math = helpers_math;
 var rtl = helpers_rtl;
-var interpolation$1 = helpers_interpolation;
+var interpolation = helpers_interpolation;
 var segment = helpers_segment;
 helpers$1.easing = easing;
 helpers$1.canvas = canvas;
@@ -3912,7 +3910,7 @@ helpers$1.curve = curve;
 helpers$1.options = options;
 helpers$1.math = math;
 helpers$1.rtl = rtl;
-helpers$1.interpolation = interpolation$1;
+helpers$1.interpolation = interpolation;
 helpers$1.segment = segment;
 
 function interpolate(start, view, model, ease) {
@@ -3926,7 +3924,7 @@ function interpolate(start, view, model, ease) {
 
 		// if a value is added to the model after pivot() has been called, the view
 		// doesn't contain it, so let's initialize the view to the target value.
-		if (!view.hasOwnProperty(key)) {
+		if (!Object.prototype.hasOwnProperty.call(view, key)) {
 			view[key] = target;
 		}
 
@@ -3936,7 +3934,7 @@ function interpolate(start, view, model, ease) {
 			continue;
 		}
 
-		if (!start.hasOwnProperty(key)) {
+		if (!Object.prototype.hasOwnProperty.call(start, key)) {
 			start[key] = actual;
 		}
 
@@ -4961,7 +4959,7 @@ var element_arc = core_element.extend({
 	}
 });
 
-const {_bezierInterpolation, _pointInLine: _pointInLine$1, _steppedInterpolation} = helpers$1.interpolation;
+const {_bezierInterpolation: _bezierInterpolation$1, _pointInLine: _pointInLine$1, _steppedInterpolation: _steppedInterpolation$1} = helpers$1.interpolation;
 const {_computeSegments: _computeSegments$1, _boundSegments: _boundSegments$1} = helpers$1.segment;
 const {_steppedLineTo, _bezierCurveTo} = helpers$1.canvas;
 const {_updateBezierControlPoints: _updateBezierControlPoints$1} = helpers$1.curve;
@@ -5177,11 +5175,11 @@ function _getSegmentMethod(line) {
  */
 function _getInterpolationMethod(options) {
   if (options.stepped) {
-    return _steppedInterpolation;
+    return _steppedInterpolation$1;
   }
 
   if (options.tension || options.cubicInterpolationMode === 'monotone') {
-    return _bezierInterpolation;
+    return _bezierInterpolation$1;
   }
 
   return _pointInLine$1;
@@ -7112,7 +7110,7 @@ var core_layouts = {
 
 		for (; i < ilen; ++i) {
 			prop = props[i];
-			if (options.hasOwnProperty(prop)) {
+			if (Object.prototype.hasOwnProperty.call(options, prop)) {
 				item[prop] = options[prop];
 			}
 		}
@@ -7940,15 +7938,15 @@ var core_scaleService = {
 		this.defaults[type] = helpers$1.clone(scaleDefaults);
 	},
 	getScaleConstructor: function(type) {
-		return this.constructors.hasOwnProperty(type) ? this.constructors[type] : undefined;
+		return Object.prototype.hasOwnProperty.call(this.constructors, type) ? this.constructors[type] : undefined;
 	},
 	getScaleDefaults: function(type) {
 		// Return the scale defaults merged with the global settings so that we always use the latest ones
-		return this.defaults.hasOwnProperty(type) ? helpers$1.merge(Object.create(null), [core_defaults.scale, this.defaults[type]]) : {};
+		return Object.prototype.hasOwnProperty.call(this.defaults, type) ? helpers$1.merge(Object.create(null), [core_defaults.scale, this.defaults[type]]) : {};
 	},
 	updateScaleDefaults: function(type, additions) {
 		var me = this;
-		if (me.defaults.hasOwnProperty(type)) {
+		if (Object.prototype.hasOwnProperty.call(me.defaults, type)) {
 			me.defaults[type] = helpers$1.extend(me.defaults[type], additions);
 		}
 	},
@@ -10727,7 +10725,6 @@ var core_helpers = function() {
 			return value;
 		} :
 		function(value) {
-			/* global CanvasGradient */
 			if (value instanceof CanvasGradient) {
 				value = core_defaults.global.defaultColor;
 			}
@@ -10736,7 +10733,6 @@ var core_helpers = function() {
 		};
 
 	helpers$1.getHoverColor = function(colorValue) {
-		/* global CanvasPattern */
 		return (colorValue instanceof CanvasPattern || colorValue instanceof CanvasGradient) ?
 			colorValue :
 			helpers$1.color(colorValue).saturate(0.5).darken(0.1).rgbString();
@@ -14909,10 +14905,8 @@ core_controller.helpers.each(scales, function(scale, type) {
 
 // Loading built-in plugins
 
-for (var k in plugins) {
-	if (plugins.hasOwnProperty(k)) {
-		core_controller.plugins.register(plugins[k]);
-	}
+for (const k of plugins) {
+    core_controller.plugins.register(plugins[k]);
 }
 
 core_controller.platform.initialize();
