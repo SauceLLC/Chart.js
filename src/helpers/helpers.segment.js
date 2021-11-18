@@ -237,7 +237,7 @@ function solidSegments(points, start, max, loop) {
  * @private
  */
 function _computeSegments(line, segmentOptions) {
-  const points = line.getPoints();;
+  const points = line.getPoints();
   const spanGaps = line._scale.options.spanGaps;
   const count = points.length;
 

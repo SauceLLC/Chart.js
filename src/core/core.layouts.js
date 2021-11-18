@@ -280,7 +280,7 @@ module.exports = {
 
 		for (; i < ilen; ++i) {
 			prop = props[i];
-			if (options.hasOwnProperty(prop)) {
+			if (Object.prototype.hasOwnProperty.call(options, prop)) {
 				item[prop] = options[prop];
 			}
 		}

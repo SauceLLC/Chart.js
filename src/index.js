@@ -35,11 +35,9 @@ Chart.helpers.each(scales, function(scale, type) {
 require('./adapters');
 
 // Loading built-in plugins
-var plugins = require('./plugins');
-for (var k in plugins) {
-	if (plugins.hasOwnProperty(k)) {
-		Chart.plugins.register(plugins[k]);
-	}
+const plugins = require('./plugins');
+for (const k of plugins) {
+    Chart.plugins.register(plugins[k]);
 }
 
 Chart.platform.initialize();
