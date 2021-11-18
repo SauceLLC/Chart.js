@@ -144,7 +144,7 @@ function _boundSegments(line, bounds) {
   const segments = line.segments;
 
   for (let i = 0; i < segments.length; i++) {
-    const sub = _boundSegment(segments[i], line.points, bounds);
+    const sub = _boundSegment(segments[i], line.getPoints(), bounds);
     if (sub.length) {
       result.push(...sub);
     }
@@ -237,8 +237,8 @@ function solidSegments(points, start, max, loop) {
  * @private
  */
 function _computeSegments(line, segmentOptions) {
-  const points = line.points;
-  const spanGaps = line.options.spanGaps;
+  const points = line.getPoints();;
+  const spanGaps = line._scale.options.spanGaps;
   const count = points.length;
 
   if (!count) {
@@ -279,7 +279,7 @@ function splitByStyles(line, segments, points, segmentOptions) {
  */
 function doSplitByStyles(line, segments, points, segmentOptions) {
   const chartContext = line._chart.getContext();
-  const baseStyle = readStyle(line.options);
+  const baseStyle = readStyle(line._scale.options);
   const {_datasetIndex: datasetIndex, options: {spanGaps}} = line;
   const count = points.length;
   const result = [];
