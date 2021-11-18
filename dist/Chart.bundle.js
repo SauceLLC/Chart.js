@@ -3689,7 +3689,7 @@ function _boundSegments(line, bounds) {
   const segments = line.segments;
 
   for (let i = 0; i < segments.length; i++) {
-    const sub = _boundSegment(segments[i], line.points, bounds);
+    const sub = _boundSegment(segments[i], line.getPoints(), bounds);
     if (sub.length) {
       result.push(...sub);
     }
@@ -3782,8 +3782,7 @@ function solidSegments(points, start, max, loop) {
  * @private
  */
 function _computeSegments(line, segmentOptions) {
-  const points = line.points;
-  const spanGaps = line.options.spanGaps;
+  const points = line.getPoints();  const spanGaps = line._scale.options.spanGaps;
   const count = points.length;
 
   if (!count) {
@@ -3824,7 +3823,7 @@ function splitByStyles(line, segments, points, segmentOptions) {
  */
 function doSplitByStyles(line, segments, points, segmentOptions) {
   const chartContext = line._chart.getContext();
-  const baseStyle = readStyle(line.options);
+  const baseStyle = readStyle(line._scale.options);
   const {_datasetIndex: datasetIndex, options: {spanGaps}} = line;
   const count = points.length;
   const result = [];
@@ -5010,7 +5009,7 @@ function setStyle(ctx, options, style = options) {
 }
 
 function lineTo(ctx, previous, target) {
-  ctx.lineTo(target.x, target.y);
+  ctx.lineTo(target._view.x, target._view.y);
 }
 
 function getLineMethod(options) {
@@ -5071,7 +5070,7 @@ function pathSegment(ctx, line, segment, params) {
       // If there is a skipped point inside a segment, spanGaps must be true
       continue;
     } else if (move) {
-      ctx.moveTo(point.x, point.y);
+      ctx.moveTo(point._view.x, point._view.y);
       move = false;
     } else {
       lineMethod(ctx, prev, point, reverse, options.stepped);
@@ -5104,7 +5103,7 @@ function pathSegment(ctx, line, segment, params) {
  * @param {number} params.end - limit segment to points ending at `start` + `count` index
  */
 function fastPathSegment(ctx, line, segment, params) {
-  const points = line.points;
+  const points = line.getPoints();
   const {count, start, ilen} = pathVars(points, segment, params);
   const {move = true, reverse} = params || {};
   let avgX = 0;
@@ -5125,7 +5124,7 @@ function fastPathSegment(ctx, line, segment, params) {
 
   if (move) {
     point = points[pointIndex(0)];
-    ctx.moveTo(point.x, point.y);
+    ctx.moveTo(point._view.x, point._view.y);
   }
 
   for (i = 0; i <= ilen; ++i) {
@@ -5136,8 +5135,8 @@ function fastPathSegment(ctx, line, segment, params) {
       continue;
     }
 
-    const x = point.x;
-    const y = point.y;
+    const x = point._view.x;
+    const y = point._view.y;
     const truncX = x | 0; // truncated x-coordinate
 
     if (truncX === prevX) {
@@ -5171,7 +5170,7 @@ function fastPathSegment(ctx, line, segment, params) {
  * @private
  */
 function _getSegmentMethod(line) {
-  const opts = line.options;
+  const opts = line._scale.options;
   const borderDash = opts.borderDash && opts.borderDash.length;
   const useFastPath = !line._decimated && !line._loop && !opts.tension && opts.cubicInterpolationMode !== 'monotone' && !opts.stepped && !borderDash;
   return useFastPath ? fastPathSegment : pathSegment;
@@ -5200,14 +5199,14 @@ function strokePathWithCache(ctx, line, start, count) {
       path.closePath();
     }
   }
-  setStyle(ctx, line.options);
+  setStyle(ctx, line._view, line._scale.options);
   ctx.stroke(path);
 }
 
 function strokePathDirect(ctx, line, start, count) {
-  const {segments, options} = line;
+  const segments = line.getSegments();
+  const options = line._scale.options;
   const segmentMethod = _getSegmentMethod(line);
-
   for (const segment of segments) {
     setStyle(ctx, options, segment.style);
     ctx.beginPath();
@@ -5221,7 +5220,7 @@ function strokePathDirect(ctx, line, start, count) {
 const usePath2D = typeof Path2D === 'function';
 
 function draw(ctx, line, start, count) {
-  if (usePath2D && !line.options.segment) {
+  if (usePath2D && !line._scale.options.segment) {
     strokePathWithCache(ctx, line, start, count);
   } else {
     strokePathDirect(ctx, line, start, count);
@@ -5258,11 +5257,11 @@ var element_line = core_element.extend({
   },
 
   getPoints: function() {
-    return this._points;
+    return this._children.slice();
   },
 
   getSegments: function() {
-    return this._segments || (this._segments = _computeSegments$1(this, this.options.segment));
+    return this._segments || (this._segments = _computeSegments$1(this, this._scale.options.segment));
   },
 
   /**
@@ -5294,7 +5293,7 @@ var element_line = core_element.extend({
    * @returns {PointElement|undefined}
    */
   interpolate: function(point, property) {
-    const options = this.options;
+    const options = this._scale.options;
     const value = point[property];
     const points = this.getPoints();
     const segments = _boundSegments$1(this, {property, start: value, end: value});
@@ -5360,17 +5359,14 @@ var element_line = core_element.extend({
 
   /**
    * Draw
-   * @param {CanvasRenderingContext2D} ctx
-   * @param {object} chartArea
-   * @param {number} [start]
-   * @param {number} [count]
    */
-  draw: function(ctx, chartArea, start, count) {
-    const options = this.options || {};
+  draw: function() {
+    const vm = this._view;
+    const ctx = this._chart.ctx;
     const points = this.getPoints() || [];
-    if (points.length && options.borderWidth) {
+    if (points.length && vm.borderWidth) {
       ctx.save();
-      draw(ctx, this, start, count);
+      draw(ctx, this); // Would pass start, count but 2.9 doesn't have this.
       ctx.restore();
     }
     if (this.animated) {
