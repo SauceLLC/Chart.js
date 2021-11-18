@@ -36,8 +36,8 @@ require('./adapters');
 
 // Loading built-in plugins
 const plugins = require('./plugins');
-for (const k of plugins) {
-    Chart.plugins.register(plugins[k]);
+for (const x of Object.values(plugins)) {
+    Chart.plugins.register(x);
 }
 
 Chart.platform.initialize();
