@@ -1,11 +1,13 @@
 /* eslint-env es6 */
 
-const commonjs = require('rollup-plugin-commonjs');
-const resolve = require('rollup-plugin-node-resolve');
-const terser = require('rollup-plugin-terser').terser;
-const optional = require('./rollup.plugins').optional;
-const stylesheet = require('./rollup.plugins').stylesheet;
 const pkg = require('./package.json');
+const plugins = require('./rollup.plugins');
+const commonjs = require('@rollup/plugin-commonjs');
+const {nodeResolve} = require('@rollup/plugin-node-resolve');
+const {terser} = require('rollup-plugin-terser');
+const cleanup = require('rollup-plugin-cleanup');
+
+const stylesheet = plugins.stylesheet;
 
 const input = 'src/index.js';
 const banner = `/*!
@@ -16,49 +18,63 @@ const banner = `/*!
  */`;
 
 module.exports = [
-	// UMD builds (excluding moment)
 	// dist/Chart.min.js
 	// dist/Chart.js
 	{
 		input: input,
 		plugins: [
-			resolve(),
+			nodeResolve(),
 			commonjs(),
 			stylesheet({
 				extract: true
 			}),
-			optional({
-				include: ['moment']
-			})
+            cleanup({
+                comments: 'none',
+                lineEndings: 'unix',
+                maxEmptyLines: 1,
+                sourcemap: false,
+            }),
+			terser({
+                ecma: 6,
+                keep_classnames: true,
+                keep_fnames: true,
+                compress: {
+                    defaults: false,
+                    arrows: true,
+                    dead_code: true,
+                    unused: true,
+                    evaluate: true,
+                },
+                format: {
+                    beautify: true,
+                    indent_level: 4,
+                    comments: false,
+                    keep_numbers: true,
+                    quote_style: 3, // use orig
+					preamble: banner,
+                    braces: true,
+                }
+            })
 		],
 		output: {
 			name: 'Chart',
 			file: 'dist/Chart.js',
-			banner: banner,
 			format: 'umd',
 			indent: false,
-			globals: {
-				moment: 'moment'
-			}
-		},
-		external: [
-			'moment'
-		]
+		}
 	},
 	{
 		input: input,
 		plugins: [
-			resolve(),
+			nodeResolve(),
 			commonjs(),
-			optional({
-				include: ['moment']
-			}),
 			stylesheet({
 				extract: true,
 				minify: true
 			}),
 			terser({
-				output: {
+                ecma: 6,
+				format: {
 					preamble: banner
 				}
 			})
@@ -68,52 +84,6 @@ module.exports = [
 			file: 'dist/Chart.min.js',
 			format: 'umd',
 			indent: false,
-			globals: {
-				moment: 'moment'
-			}
 		},
-		external: [
-			'moment'
-		]
-	},
-
-	// UMD builds (including moment)
-	// dist/Chart.bundle.min.js
-	// dist/Chart.bundle.js
-	{
-		input: input,
-		plugins: [
-			resolve(),
-			commonjs(),
-			stylesheet()
-		],
-		output: {
-			name: 'Chart',
-			file: 'dist/Chart.bundle.js',
-			banner: banner,
-			format: 'umd',
-			indent: false
-		}
-	},
-	{
-		input: input,
-		plugins: [
-			resolve(),
-			commonjs(),
-			stylesheet({
-				minify: true
-			}),
-			terser({
-				output: {
-					preamble: banner
-				}
-			})
-		],
-		output: {
-			name: 'Chart',
-			file: 'dist/Chart.bundle.min.js',
-			format: 'umd',
-			indent: false
-		}
 	}
 ];
