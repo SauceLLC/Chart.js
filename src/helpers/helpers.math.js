@@ -69,7 +69,7 @@ var exports = {
             || (angleToStart > angleToEnd && startToAngle < endToAngle);
     },
 
-    almostEquals: (x, y, epsilon) => (x - y) < epsilon || (y - x) < epsilon,
+    almostEquals: (x, y, epsilon) => Math.abs(x - y) < epsilon,
 };
 
 module.exports = exports;

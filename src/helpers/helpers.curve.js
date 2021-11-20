@@ -3,7 +3,7 @@ const {almostEquals, distanceBetweenPoints} = require('./helpers.math');
 const {_isPointInArea} = require('./helpers.canvas');
 
 const EPSILON = Number.EPSILON || 1e-14;
-const getPoint = (points, i) => i < points.length && !points[i].skip && points[i];
+const getPoint = (points, i) => i < points.length && !points[i]._model.skip && points[i];
 const getValueAxis = (indexAxis) => indexAxis === 'x' ? 'y' : 'x';
 
 
@@ -13,9 +13,9 @@ function splineCurve(firstPoint, middlePoint, afterPoint, t) {
 
   // This function must also respect "skipped" points
 
-  const previous = firstPoint.skip ? middlePoint : firstPoint;
+  const previous = firstPoint._model.skip ? middlePoint : firstPoint;
   const current = middlePoint;
-  const next = afterPoint.skip ? middlePoint : afterPoint;
+  const next = afterPoint._model.skip ? middlePoint : afterPoint;
   const d01 = distanceBetweenPoints(current, previous);
   const d12 = distanceBetweenPoints(next, current);
 
@@ -63,7 +63,7 @@ function monotoneAdjust(points, deltaK, mK) {
 
     alphaK = mK[i] / deltaK[i];
     betaK = mK[i + 1] / deltaK[i];
-    squaredMagnitude = Math.pow(alphaK, 2) + Math.pow(betaK, 2);
+    squaredMagnitude = alphaK * alphaK + betaK * betaK;
     if (squaredMagnitude <= 9) {
       continue;
     }
@@ -74,7 +74,7 @@ function monotoneAdjust(points, deltaK, mK) {
   }
 }
 
-function monotoneCompute(points, mK, indexAxis = 'x') {
+function monotoneCompute(points, mK, indexAxis = 'x', tension=0.4) {
   const valueAxis = getValueAxis(indexAxis);
   const pointsLen = points.length;
   let delta, pointBefore, pointCurrent;
@@ -91,12 +91,12 @@ function monotoneCompute(points, mK, indexAxis = 'x') {
     const iPixel = pointCurrent._model[indexAxis];
     const vPixel = pointCurrent._model[valueAxis];
     if (pointBefore) {
-      delta = (iPixel - pointBefore._model[indexAxis]) / 3;
+      delta = (iPixel - pointBefore._model[indexAxis]) / (1 / tension);
       pointCurrent[`cp1${indexAxis}`] = iPixel - delta;
       pointCurrent[`cp1${valueAxis}`] = vPixel - delta * mK[i];
     }
     if (pointAfter) {
-      delta = (pointAfter._model[indexAxis] - iPixel) / 3;
+      delta = (pointAfter._model[indexAxis] - iPixel) / (1 / tension);
       pointCurrent[`cp2${indexAxis}`] = iPixel + delta;
       pointCurrent[`cp2${valueAxis}`] = vPixel + delta * mK[i];
     }
@@ -120,7 +120,7 @@ function monotoneCompute(points, mK, indexAxis = 'x') {
  * }[]} points
  * @param {string} indexAxis
  */
-function splineCurveMonotone(points, indexAxis = 'x') {
+function splineCurveMonotone(points, indexAxis = 'x', tension) {
   const valueAxis = getValueAxis(indexAxis);
   const pointsLen = points.length;
   const deltaK = Array(pointsLen).fill(0);
@@ -154,7 +154,7 @@ function splineCurveMonotone(points, indexAxis = 'x') {
 
   monotoneAdjust(points, deltaK, mK);
 
-  monotoneCompute(points, mK, indexAxis);
+  monotoneCompute(points, mK, indexAxis, tension);
 }
 
 function capControlPoint(pt, min, max) {
@@ -187,25 +187,18 @@ function capBezierPoints(points, area) {
  * @private
  */
 function _updateBezierControlPoints(points, options, area, loop, indexAxis) {
-  let i, ilen, point, controlPoints;
-
   // Only consider points that are drawn in case the spanGaps option is used
   if (options.spanGaps) {
-    points = points.filter((pt) => !pt.skip);
+    points = points.filter((pt) => !pt._model.skip);
   }
-
   if (options.cubicInterpolationMode === 'monotone') {
-    splineCurveMonotone(points, indexAxis);
+    splineCurveMonotone(points, indexAxis, options.tension);
   } else {
     let prev = loop ? points[points.length - 1] : points[0];
-    for (i = 0, ilen = points.length; i < ilen; ++i) {
-      point = points[i];
-      controlPoints = splineCurve(
-        prev,
-        point,
-        points[Math.min(i + 1, ilen - (loop ? 0 : 1)) % ilen],
-        options.tension
-      );
+    for (let i = 0, ilen = points.length; i < ilen; i++) {
+      const point = points[i];
+      const after = points[Math.min(i + 1, ilen - (loop ? 0 : 1)) % ilen];
+      const controlPoints = splineCurve(prev, point, after, options.tension);
       point.cp1x = controlPoints.previous.x;
       point.cp1y = controlPoints.previous.y;
       point.cp2x = controlPoints.next.x;

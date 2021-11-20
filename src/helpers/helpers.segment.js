@@ -98,7 +98,7 @@ function _boundSegment(segment, points, bounds) {
   for (let i = start, prev = start; i <= end; ++i) {
     point = points[i % count];
 
-    if (point.skip) {
+    if (point._model.skip) {
       continue;
     }
 
@@ -161,13 +161,13 @@ function findStartAndEnd(points, count, loop, spanGaps) {
 
   if (loop && !spanGaps) {
     // loop and not spanning gaps, first find a gap to start from
-    while (start < count && !points[start].skip) {
+    while (start < count && !points[start]._model.skip) {
       start++;
     }
   }
 
   // find first non skipped point (after the first gap possibly)
-  while (start < count && points[start].skip) {
+  while (start < count && points[start]._model.skip) {
     start++;
   }
 
@@ -179,7 +179,7 @@ function findStartAndEnd(points, count, loop, spanGaps) {
     end += start;
   }
 
-  while (end > start && points[end % count].skip) {
+  while (end > start && points[end % count]._model.skip) {
     end--;
   }
 
@@ -205,8 +205,8 @@ function solidSegments(points, start, max, loop) {
 
   for (end = start + 1; end <= max; ++end) {
     const cur = points[end % count];
-    if (cur.skip || cur.stop) {
-      if (!prev.skip) {
+    if (cur._model.skip || cur.stop) {
+      if (!prev._model.skip) {
         loop = false;
         result.push({start: start % count, end: (end - 1) % count, loop});
         // @ts-ignore
@@ -214,7 +214,7 @@ function solidSegments(points, start, max, loop) {
       }
     } else {
       last = end;
-      if (prev.skip) {
+      if (prev._model.skip) {
         start = end;
       }
     }
@@ -294,10 +294,10 @@ function doSplitByStyles(line, segments, points, segmentOptions) {
     }
     // Style can not start/end on a skipped point, adjust indices accordingly
     s += count;
-    while (points[s % count].skip) {
+    while (points[s % count]._model.skip) {
       s -= dir;
     }
-    while (points[e % count].skip) {
+    while (points[e % count]._model.skip) {
       e += dir;
     }
     if (s % count !== e % count) {

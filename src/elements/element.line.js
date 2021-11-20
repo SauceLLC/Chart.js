@@ -105,11 +105,11 @@ function pathSegment(ctx, line, segment, params) {
   for (i = 0; i <= ilen; ++i) {
     point = points[(start + (reverse ? ilen - i : i)) % count];
 
-    if (point.skip) {
+    if (point._model.skip) {
       // If there is a skipped point inside a segment, spanGaps must be true
       continue;
     } else if (move) {
-      ctx.moveTo(point._view.x, point._view.y);
+      ctx.moveTo(point._model.x, point._model.y);
       move = false;
     } else {
       lineMethod(ctx, prev, point, reverse, options.stepped);
@@ -163,21 +163,17 @@ function fastPathSegment(ctx, line, segment, params) {
 
   if (move) {
     point = points[pointIndex(0)];
-    debugger;
     ctx.moveTo(point._model.x, point._model.y);
   }
 
   for (i = 0; i <= ilen; ++i) {
     point = points[pointIndex(i)];
 
-    if (point.skip) {
+    if (point._model.skip) {
       // If there is a skipped point inside a segment, spanGaps must be true
       continue;
     }
 
-    if (point._view) {
-      debugger;
-    }
     const x = point._model.x;
     const y = point._model.y;
     const truncX = x | 0; // truncated x-coordinate
@@ -243,16 +239,15 @@ function strokePathWithCache(ctx, line, start, count) {
       path.closePath();
     }
   }
-  setStyle(ctx, line._view, line._model);
+  setStyle(ctx, line._model);
   ctx.stroke(path);
 }
 
 function strokePathDirect(ctx, line, start, count) {
   const segments = line.getSegments();
-  const options = line._model;
   const segmentMethod = _getSegmentMethod(line);
   for (const segment of segments) {
-    setStyle(ctx, options, segment.style);
+    setStyle(ctx, line._model, segment.style);
     ctx.beginPath();
     if (segmentMethod(ctx, line, segment, {start, end: start + count - 1})) {
       ctx.closePath();
@@ -416,10 +411,9 @@ module.exports = Element.extend({
    * Draw
    */
   draw: function() {
-    const vm = this._view;
     const ctx = this._chart.ctx;
     const points = this.getPoints() || [];
-    if (points.length && vm.borderWidth) {
+    if (points.length && this._model.borderWidth) {
       ctx.save();
       draw(ctx, this); // Would pass start, count but 2.9 doesn't have this.
       ctx.restore();
