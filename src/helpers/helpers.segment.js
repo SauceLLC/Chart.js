@@ -45,7 +45,7 @@ function getSegment(segment, points, bounds) {
     start += count;
     end += count;
     for (i = 0, ilen = count; i < ilen; ++i) {
-      if (!between(normalize(points[start % count][property]), startBound, endBound)) {
+      if (!between(normalize(points[start % count]._model[property]), startBound, endBound)) {
         break;
       }
       start--;
@@ -102,7 +102,7 @@ function _boundSegment(segment, points, bounds) {
       continue;
     }
 
-    value = normalize(point[property]);
+    value = normalize(point._model[property]);
 
     if (value === prevValue) {
       continue;
@@ -141,7 +141,7 @@ function _boundSegment(segment, points, bounds) {
  */
 function _boundSegments(line, bounds) {
   const result = [];
-  const segments = line.segments;
+  const segments = line.getSegments();
 
   for (let i = 0; i < segments.length; i++) {
     const sub = _boundSegment(segments[i], line.getPoints(), bounds);
@@ -238,7 +238,7 @@ function solidSegments(points, start, max, loop) {
  */
 function _computeSegments(line, segmentOptions) {
   const points = line.getPoints();
-  const spanGaps = line._scale.options.spanGaps;
+  const spanGaps = line._model ? line._model.spanGaps : undefined;
   const count = points.length;
 
   if (!count) {
@@ -279,7 +279,7 @@ function splitByStyles(line, segments, points, segmentOptions) {
  */
 function doSplitByStyles(line, segments, points, segmentOptions) {
   const chartContext = line._chart.getContext();
-  const baseStyle = readStyle(line._scale.options);
+  const baseStyle = readStyle(line._model);
   const {_datasetIndex: datasetIndex, options: {spanGaps}} = line;
   const count = points.length;
   const result = [];

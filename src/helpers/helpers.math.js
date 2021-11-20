@@ -47,6 +47,12 @@ var exports = {
 		return isPowerOf10 ? powerOf10 : exponent;
 	},
 
+    distanceBetweenPoints: (pt1, pt2) => {
+        const a = pt2._model.x - pt1._model.x;
+        const b = pt2._model.y - pt1._model.y;
+        return Math.sqrt(a * a + b * b);
+    },
+
     _angleDiff: (a, b) => (a - b + PITAU) % TAU - PI,
 
     _normalizeAngle: a => (a % TAU + TAU) % TAU,
@@ -63,6 +69,7 @@ var exports = {
             || (angleToStart > angleToEnd && startToAngle < endToAngle);
     },
 
+    almostEquals: (x, y, epsilon) => (x - y) < epsilon || (y - x) < epsilon,
 };
 
 module.exports = exports;

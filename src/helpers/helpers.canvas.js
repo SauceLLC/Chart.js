@@ -229,7 +229,20 @@ var exports = {
 			flip ? target.controlPointNextY : target.controlPointPreviousY,
 			target.x,
 			target.y);
-	}
+	},
+
+    _bezierCurveTo: function(ctx, previous, target, flip) {
+        if (!previous) {
+            return ctx.lineTo(target._model.x, target._model.y);
+        }
+        ctx.bezierCurveTo(
+            flip ? previous.cp1x : previous.cp2x,
+            flip ? previous.cp1y : previous.cp2y,
+            flip ? target.cp2x : target.cp1x,
+            flip ? target.cp2y : target.cp1y,
+            target._model.x,
+            target._model.y);
+    },
 };
 
 module.exports = exports;

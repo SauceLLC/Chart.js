@@ -1,3 +1,5 @@
+// vim: ts=2:sw=2:expandtab
+
 'use strict';
 
 const defaults = require('../core/core.defaults');
@@ -34,11 +36,7 @@ defaults._set('global', {
 });
 
 
-/**
- * @typedef { import("./element.point").default } PointElement
- */
-
-function setStyle(ctx, options, style = options) {
+function setStyle(ctx, options, style=options) {
   ctx.lineCap = valueOrDefault(style.borderCapStyle, options.borderCapStyle);
   ctx.setLineDash(valueOrDefault(style.borderDash, options.borderDash));
   ctx.lineDashOffset = valueOrDefault(style.borderDashOffset, options.borderDashOffset);
@@ -48,7 +46,8 @@ function setStyle(ctx, options, style = options) {
 }
 
 function lineTo(ctx, previous, target) {
-  ctx.lineTo(target._view.x, target._view.y);
+  debugger;
+  ctx.lineTo(target._model.x, target._model.y);
 }
 
 function getLineMethod(options) {
@@ -95,7 +94,8 @@ function pathVars(points, segment, params = {}) {
  * @param {number} params.end - limit segment to points ending at `start` + `count` index
  */
 function pathSegment(ctx, line, segment, params) {
-  const {points, options} = line;
+  const points = line.getPoints();
+  const options = line._model || {};
   const {count, start, loop, ilen} = pathVars(points, segment, params);
   const lineMethod = getLineMethod(options);
   // eslint-disable-next-line prefer-const
@@ -163,7 +163,8 @@ function fastPathSegment(ctx, line, segment, params) {
 
   if (move) {
     point = points[pointIndex(0)];
-    ctx.moveTo(point._view.x, point._view.y);
+    debugger;
+    ctx.moveTo(point._model.x, point._model.y);
   }
 
   for (i = 0; i <= ilen; ++i) {
@@ -174,8 +175,11 @@ function fastPathSegment(ctx, line, segment, params) {
       continue;
     }
 
-    const x = point._view.x;
-    const y = point._view.y;
+    if (point._view) {
+      debugger;
+    }
+    const x = point._model.x;
+    const y = point._model.y;
     const truncX = x | 0; // truncated x-coordinate
 
     if (truncX === prevX) {
@@ -209,9 +213,10 @@ function fastPathSegment(ctx, line, segment, params) {
  * @private
  */
 function _getSegmentMethod(line) {
-  const opts = line._scale.options;
+  const opts = line._model || {};
   const borderDash = opts.borderDash && opts.borderDash.length;
-  const useFastPath = !line._decimated && !line._loop && !opts.tension && opts.cubicInterpolationMode !== 'monotone' && !opts.stepped && !borderDash;
+  const useFastPath = !line._decimated && !line._loop && !opts.tension &&
+    opts.cubicInterpolationMode !== 'monotone' && !opts.stepped && !borderDash;
   return useFastPath ? fastPathSegment : pathSegment;
 }
 
@@ -238,13 +243,13 @@ function strokePathWithCache(ctx, line, start, count) {
       path.closePath();
     }
   }
-  setStyle(ctx, line._view, line._scale.options);
+  setStyle(ctx, line._view, line._model);
   ctx.stroke(path);
 }
 
 function strokePathDirect(ctx, line, start, count) {
   const segments = line.getSegments();
-  const options = line._scale.options;
+  const options = line._model;
   const segmentMethod = _getSegmentMethod(line);
   for (const segment of segments) {
     setStyle(ctx, options, segment.style);
@@ -259,7 +264,7 @@ function strokePathDirect(ctx, line, start, count) {
 const usePath2D = typeof Path2D === 'function';
 
 function draw(ctx, line, start, count) {
-  if (usePath2D && !line._scale.options.segment) {
+  if (usePath2D && !line._model.segment) {
     strokePathWithCache(ctx, line, start, count);
   } else {
     strokePathDirect(ctx, line, start, count);
@@ -274,13 +279,23 @@ module.exports = Element.extend({
     Element.prototype.constructor();
     this._decimated = false;
     this._pointsUpdated = false;
-    if (cfg) {
-      Object.assign(this, cfg);
+    const _cfg = Object.assign({}, cfg);
+    if (_cfg.points) {
+      this._points = _cfg.points;
+      delete _cfg.points;
+    }
+    if (_cfg.options) {
+      // Hack for backport of v3 line with v2 controller.
+      this._preModelOptions = _cfg.options;
+      delete _cfg.options;
+    }
+    if (Object.keys(_cfg).length) {
+      Object.assign(this, _cfg);
     }
   },
 
   updateControlPoints: function(chartArea, indexAxis) {
-    const options = this.options;
+    const options = this._model;
     if ((options.tension || options.cubicInterpolationMode === 'monotone') && !options.stepped && !this._pointsUpdated) {
       const loop = options.spanGaps ? this._loop : this._fullLoop;
       _updateBezierControlPoints(this._points, options, chartArea, loop, indexAxis);
@@ -296,11 +311,12 @@ module.exports = Element.extend({
   },
 
   getPoints: function() {
-    return this._children.slice();
+    return this._points.slice();
   },
 
   getSegments: function() {
-    return this._segments || (this._segments = _computeSegments(this, this._scale.options.segment));
+    return this._segments ||
+      (this._segments = _computeSegments(this, this._model ? this._model.segment : undefined));
   },
 
   /**
@@ -332,7 +348,7 @@ module.exports = Element.extend({
    * @returns {PointElement|undefined}
    */
   interpolate: function(point, property) {
-    const options = this._scale.options;
+    const options = this._model || {};
     const value = point[property];
     const points = this.getPoints();
     const segments = _boundSegments(this, {property, start: value, end: value});

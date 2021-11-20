@@ -9,16 +9,16 @@
 
 function _pointInLine(p1, p2, t, mode) { // eslint-disable-line no-unused-vars
   return {
-    x: p1.x + t * (p2.x - p1.x),
-    y: p1.y + t * (p2.y - p1.y)
+    x: p1.x + t * (p2._model.x - p1._model.x),
+    y: p1.y + t * (p2._model.y - p1._model.y)
   };
 }
 
 function _steppedInterpolation(p1, p2, t, mode) {
   return {
-    x: p1.x + t * (p2.x - p1.x),
-    y: mode === 'middle' ? t < 0.5 ? p1.y : p2.y :
-       mode === 'after' ? t < 1 ? p1.y : p2.y : t > 0 ? p2.y : p1.y
+    x: p1._model.x + t * (p2._model.x - p1._model.x),
+    y: mode === 'middle' ? t < 0.5 ? p1._model.y : p2._model.y :
+       mode === 'after' ? t < 1 ? p1.y : p2._model.y : t > 0 ? p2._model.y : p1._model.y
   };
 }
 

@@ -1,5 +1,5 @@
 
-const {almostEquals, distanceBetweenPoints, sign} = require('./helpers.math');
+const {almostEquals, distanceBetweenPoints} = require('./helpers.math');
 const {_isPointInArea} = require('./helpers.canvas');
 
 const EPSILON = Number.EPSILON || 1e-14;
@@ -31,12 +31,12 @@ function splineCurve(firstPoint, middlePoint, afterPoint, t) {
 
   return {
     previous: {
-      x: current.x - fa * (next.x - previous.x),
-      y: current.y - fa * (next.y - previous.y)
+      x: current._model.x - fa * (next._model.x - previous._model.x),
+      y: current._model.y - fa * (next._model.y - previous._model.y)
     },
     next: {
-      x: current.x + fb * (next.x - previous.x),
-      y: current.y + fb * (next.y - previous.y)
+      x: current._model.x + fb * (next._model.x - previous._model.x),
+      y: current._model.y + fb * (next._model.y - previous._model.y)
     }
   };
 }
@@ -88,15 +88,15 @@ function monotoneCompute(points, mK, indexAxis = 'x') {
       continue;
     }
 
-    const iPixel = pointCurrent[indexAxis];
-    const vPixel = pointCurrent[valueAxis];
+    const iPixel = pointCurrent._model[indexAxis];
+    const vPixel = pointCurrent._model[valueAxis];
     if (pointBefore) {
-      delta = (iPixel - pointBefore[indexAxis]) / 3;
+      delta = (iPixel - pointBefore._model[indexAxis]) / 3;
       pointCurrent[`cp1${indexAxis}`] = iPixel - delta;
       pointCurrent[`cp1${valueAxis}`] = vPixel - delta * mK[i];
     }
     if (pointAfter) {
-      delta = (pointAfter[indexAxis] - iPixel) / 3;
+      delta = (pointAfter._model[indexAxis] - iPixel) / 3;
       pointCurrent[`cp2${indexAxis}`] = iPixel + delta;
       pointCurrent[`cp2${valueAxis}`] = vPixel + delta * mK[i];
     }
@@ -139,14 +139,16 @@ function splineCurveMonotone(points, indexAxis = 'x') {
     }
 
     if (pointAfter) {
-      const slopeDelta = pointAfter[indexAxis] - pointCurrent[indexAxis];
+      const slopeDelta = pointAfter._model[indexAxis] - pointCurrent._model[indexAxis];
 
       // In the case of two points that appear at the same x pixel, slopeDeltaX is 0
-      deltaK[i] = slopeDelta !== 0 ? (pointAfter[valueAxis] - pointCurrent[valueAxis]) / slopeDelta : 0;
+      deltaK[i] = slopeDelta !== 0 ?
+        (pointAfter._model[valueAxis] - pointCurrent._model[valueAxis]) / slopeDelta :
+        0;
     }
     mK[i] = !pointBefore ? deltaK[i]
       : !pointAfter ? deltaK[i - 1]
-      : (sign(deltaK[i - 1]) !== sign(deltaK[i])) ? 0
+      : (Math.sign(deltaK[i - 1]) !== Math.sign(deltaK[i])) ? 0
       : (deltaK[i - 1] + deltaK[i]) / 2;
   }
 

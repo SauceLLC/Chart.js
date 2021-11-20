@@ -132,12 +132,8 @@ module.exports = DatasetController.extend({
 				config.lineTension = config.tension;
 			}
 
-			// Utility
-			line._scale = me._yScale;
 			line._datasetIndex = me.index;
-			// Data
-			line._children = points;
-			// Model
+			line.setPoints(points);
 			line._model = me._resolveDatasetElementOptions(line);
 
 			line.pivot();
@@ -197,8 +193,10 @@ module.exports = DatasetController.extend({
 			tension: valueOrDefault(custom.tension, lineModel ? lineModel.tension : 0),
 			steppedLine: lineModel ? lineModel.steppedLine : false,
 			// Tooltip
-			hitRadius: options.hitRadius
+            hitRadius: options.hitRadius,
+            ...point._preModelOptions,
 		};
+        delete point._preModelOptions;
 	},
 
 	/**
@@ -219,7 +217,10 @@ module.exports = DatasetController.extend({
 		values.tension = valueOrDefault(config.lineTension, lineOptions.tension);
 		values.steppedLine = resolve([custom.steppedLine, config.steppedLine, lineOptions.stepped]);
 		values.clip = toClip(valueOrDefault(config.clip, defaultClip(me._xScale, me._yScale, values.borderWidth)));
-
+        if (element._preModelOptions) {
+            Object.assign(values, element._preModelOptions);
+            delete element._preModelOptions;
+        }
 		return values;
 	},
 
