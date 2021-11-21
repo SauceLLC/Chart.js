@@ -415,7 +415,7 @@ module.exports = Element.extend({
     const points = this.getPoints() || [];
     if (points.length && this._model.borderWidth) {
       ctx.save();
-      draw(ctx, this); // Would pass start, count but 2.9 doesn't have this.
+      draw(ctx, this, 0, points.length);
       ctx.restore();
     }
     if (this.animated) {
