@@ -92,7 +92,7 @@ module.exports = DatasetController.extend({
 		'borderJoinStyle',
 		'borderWidth',
 		'cubicInterpolationMode',
-		'fill'
+		'fill',
 	],
 
 	/**
@@ -131,11 +131,9 @@ module.exports = DatasetController.extend({
 			if (config.tension !== undefined && config.lineTension === undefined) {
 				config.lineTension = config.tension;
 			}
-
 			line._datasetIndex = me.index;
 			line.setPoints(points);
 			line._model = me._resolveDatasetElementOptions(line);
-
 			line.pivot();
 		}
 
@@ -183,7 +181,6 @@ module.exports = DatasetController.extend({
 			x: x,
 			y: y,
 			skip: custom.skip || isNaN(x) || isNaN(y),
-			// Appearance
 			radius: options.radius,
 			pointStyle: options.pointStyle,
 			rotation: options.rotation,
@@ -192,7 +189,6 @@ module.exports = DatasetController.extend({
 			borderWidth: options.borderWidth,
 			tension: valueOrDefault(custom.tension, lineModel ? lineModel.tension : 0),
 			steppedLine: lineModel ? lineModel.steppedLine : false,
-			// Tooltip
             hitRadius: options.hitRadius,
             ...point._preModelOptions,
 		};
@@ -217,6 +213,7 @@ module.exports = DatasetController.extend({
 		values.tension = valueOrDefault(config.lineTension, lineOptions.tension);
 		values.steppedLine = resolve([custom.steppedLine, config.steppedLine, lineOptions.stepped]);
 		values.clip = toClip(valueOrDefault(config.clip, defaultClip(me._xScale, me._yScale, values.borderWidth)));
+		values.segment = valueOrDefault(config.segment, lineOptions.segment);
         if (element._preModelOptions) {
             Object.assign(values, element._preModelOptions);
             delete element._preModelOptions;

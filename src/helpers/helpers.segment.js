@@ -264,7 +264,7 @@ function _computeSegments(line, segmentOptions) {
  * @return {Segment[]}
  */
 function splitByStyles(line, segments, points, segmentOptions) {
-  if (!segmentOptions || !segmentOptions.setContext || !points) {
+  if (!segmentOptions || !points) {
     return segments;
   }
   return doSplitByStyles(line, segments, points, segmentOptions);
@@ -278,9 +278,10 @@ function splitByStyles(line, segments, points, segmentOptions) {
  * @return {Segment[]}
  */
 function doSplitByStyles(line, segments, points, segmentOptions) {
-  const chartContext = line._chart.getContext();
+  //const chartContext = line._chart.getContext();
   const baseStyle = readStyle(line._model);
-  const {_datasetIndex: datasetIndex, options: {spanGaps}} = line;
+  const datasetIndex = line._datasetIndex;
+  const spanGaps = line._model.spanGaps;
   const count = points.length;
   const result = [];
   let prevStyle = baseStyle;
@@ -313,14 +314,14 @@ function doSplitByStyles(line, segments, points, segmentOptions) {
     let style;
     for (i = start + 1; i <= segment.end; i++) {
       const pt = points[i % count];
-      style = readStyle(segmentOptions.setContext(createContext(chartContext, {
+      style = readSegmentStyle(line, segmentOptions, {
         type: 'segment',
         p0: prev,
         p1: pt,
         p0DataIndex: (i - 1) % count,
         p1DataIndex: i % count,
         datasetIndex
-      })));
+      });
       if (styleChanged(style, prevStyle)) {
         addStyle(start, i - 1, segment.loop, prevStyle);
       }
@@ -333,6 +334,14 @@ function doSplitByStyles(line, segments, points, segmentOptions) {
   }
 
   return result;
+}
+
+function readSegmentStyle(line, segmentOptions, ctx) {
+    const style = {};
+    for (const [k, fn] of Object.entries(segmentOptions)) {
+        style[k] = fn(ctx);
+    }
+    return style;
 }
 
 function readStyle(options) {
