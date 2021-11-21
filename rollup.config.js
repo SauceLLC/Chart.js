@@ -24,7 +24,7 @@ module.exports = [{
         stylesheet({
             extract: true
         }),
-        terser({
+        /*terser({
             ecma: 6,
             keep_classnames: true,
             keep_fnames: true,
@@ -44,7 +44,7 @@ module.exports = [{
                 preamble: banner,
                 braces: true,
             }
-        })
+        })*/
     ],
     output: {
         name: 'Chart',
@@ -52,7 +52,7 @@ module.exports = [{
         format: 'umd',
         indent: false,
     }
-}, {
+}/*, {
     input,
     plugins: [
         nodeResolve(),
@@ -74,4 +74,4 @@ module.exports = [{
         format: 'umd',
         indent: false,
     },
-}];
+}*/];
