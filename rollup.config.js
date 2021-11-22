@@ -24,7 +24,7 @@ module.exports = [{
         stylesheet({
             extract: true
         }),
-        /*terser({
+        terser({
             ecma: 6,
             keep_classnames: true,
             keep_fnames: true,
@@ -37,14 +37,14 @@ module.exports = [{
             },
             format: {
                 beautify: true,
-                indent_level: 4,
+                indent_level: 2,
                 comments: false,
                 keep_numbers: true,
                 quote_style: 3, // use orig
                 preamble: banner,
                 braces: true,
             }
-        })*/
+        })
     ],
     output: {
         name: 'Chart',
