@@ -24,6 +24,21 @@ module.exports = [{
         stylesheet({
             extract: true
         }),
+    ],
+    output: {
+        name: 'Chart',
+        file: 'dist/Chart.js',
+        format: 'umd',
+        indent: false,
+    }
+}, {
+    input,
+    plugins: [
+        nodeResolve(),
+        commonjs(),
+        stylesheet({
+            extract: true
+        }),
         terser({
             ecma: 6,
             keep_classnames: true,
@@ -37,7 +52,7 @@ module.exports = [{
             },
             format: {
                 beautify: true,
-                indent_level: 2,
+                indent_level: 4, // use my fork of terser cmdline to replace with tabs
                 comments: false,
                 keep_numbers: true,
                 quote_style: 3, // use orig
@@ -48,30 +63,8 @@ module.exports = [{
     ],
     output: {
         name: 'Chart',
-        file: 'dist/Chart.js',
+        file: 'dist/Chart.terser.js',
         format: 'umd',
         indent: false,
     }
-}/*, {
-    input,
-    plugins: [
-        nodeResolve(),
-        commonjs(),
-        stylesheet({
-            extract: true,
-            minify: true
-        }),
-        terser({
-            ecma: 6,
-            format: {
-                preamble: banner
-            }
-        })
-    ],
-    output: {
-        name: 'Chart',
-        file: 'dist/Chart.min.js',
-        format: 'umd',
-        indent: false,
-    },
-}*/];
+}];

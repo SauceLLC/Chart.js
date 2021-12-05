@@ -4,6 +4,9 @@ all: node_modules/.build
 	@echo -e "\n *** Build Done ***\n"
 	@du -h dist/*.js
 
+watch: node_modules/.build
+	./node_modules/.bin/rollup -c -w
+
 node_modules/.build: package.json
 	npm install
 	touch $@
