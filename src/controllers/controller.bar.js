@@ -345,8 +345,9 @@ module.exports = DatasetController.extend({
 			}
 		}
 
-		base = scale.getPixelForValue(start);
-		head = scale.getPixelForValue(start + length);
+		const pad = ((stacked && scale.options.barStackPadding) || 0) / 2;
+		base = scale.getPixelForValue(start) - pad;
+		head = scale.getPixelForValue(start + length) + pad;
 		size = head - base;
 
 		if (minBarLength !== undefined && Math.abs(size) < minBarLength) {

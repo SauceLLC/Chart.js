@@ -71,6 +71,9 @@ module.exports = Element.extend({
 		var vm = this._view;
 		var ctx = this._chart.ctx;
 		var pointStyle = vm.pointStyle;
+		if (pointStyle === false) {
+			return;
+		}
 		var rotation = vm.rotation;
 		var radius = vm.radius;
 		var x = vm.x;
