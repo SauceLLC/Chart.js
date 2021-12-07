@@ -31,6 +31,7 @@ defaults._set('bar', {
 defaults._set('global', {
 	datasets: {
 		bar: {
+			categoryPad: null,
 			categoryPercentage: 0.8,
 			barPercentage: 0.9
 		}
@@ -68,13 +69,15 @@ function computeFitCategoryTraits(index, ruler, options) {
 	var thickness = options.barThickness;
 	var count = ruler.stackCount;
 	var curr = ruler.pixels[index];
+	var pad = options.categoryPad || 0;
+	var catPct = options.categoryPad == null ? options.categoryPercentage : 1;
 	var min = helpers.isNullOrUndef(thickness)
 		? computeMinSampleSize(ruler.scale, ruler.pixels)
 		: -1;
 	var size, ratio;
 
 	if (helpers.isNullOrUndef(thickness)) {
-		size = min * options.categoryPercentage;
+		size = (min * catPct) - pad;
 		ratio = options.barPercentage;
 	} else {
 		// When bar thickness is enforced, category and bar percentages are ignored.
@@ -102,7 +105,8 @@ function computeFlexCategoryTraits(index, ruler, options) {
 	var curr = pixels[index];
 	var prev = index > 0 ? pixels[index - 1] : null;
 	var next = index < pixels.length - 1 ? pixels[index + 1] : null;
-	var percent = options.categoryPercentage;
+	var pad = options.categoryPad || 0;
+	var percent = options.categoryPad == null ? options.categoryPercentage : 1;
 	var start, size;
 
 	if (prev === null) {
@@ -116,8 +120,8 @@ function computeFlexCategoryTraits(index, ruler, options) {
 		next = curr + curr - prev;
 	}
 
-	start = curr - (curr - Math.min(prev, next)) / 2 * percent;
-	size = Math.abs(next - prev) / 2 * percent;
+	start = (curr - (curr - Math.min(prev, next)) / 2 * percent) + pad;
+	size = (Math.abs(next - prev) / 2 * percent) - pad;
 
 	return {
 		chunk: size / ruler.stackCount,
@@ -141,6 +145,7 @@ module.exports = DatasetController.extend({
 		'barPercentage',
 		'barThickness',
 		'categoryPercentage',
+		'categoryPad',
 		'maxBarThickness',
 		'minBarLength'
 	],
@@ -423,6 +428,7 @@ module.exports = DatasetController.extend({
 		values.barPercentage = valueOrDefault(indexOpts.barPercentage, values.barPercentage);
 		values.barThickness = valueOrDefault(indexOpts.barThickness, values.barThickness);
 		values.categoryPercentage = valueOrDefault(indexOpts.categoryPercentage, values.categoryPercentage);
+		values.categoryPad = valueOrDefault(indexOpts.categoryPad, values.categoryPad);
 		values.maxBarThickness = valueOrDefault(indexOpts.maxBarThickness, values.maxBarThickness);
 		values.minBarLength = valueOrDefault(valueOpts.minBarLength, values.minBarLength);
 
