@@ -22,12 +22,6 @@
   "bugs": {
     "url": "https://github.com/chartjs/Chart.js/issues"
   },
-  "files": [
-    "bower.json",
-    "composer.json",
-    "dist/*.css",
-    "dist/*.js"
-  ],
   "devDependencies": {
     "@rollup/plugin-commonjs": "^21.0.1",
     "@rollup/plugin-node-resolve": "^13.0.6",
