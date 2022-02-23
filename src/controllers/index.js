@@ -2,7 +2,7 @@
 
 var bar = require('./controller.bar');
 //var bubble = require('./controller.bubble');
-//var doughnut = require('./controller.doughnut');
+var doughnut = require('./controller.doughnut');
 //var horizontalBar = require('./controller.horizontalBar');
 var line = require('./controller.line');
 //var polarArea = require('./controller.polarArea');
@@ -17,7 +17,7 @@ var scatter = require('./controller.scatter');
 module.exports = {
 	bar: bar,
 //	bubble: bubble,
-//	doughnut: doughnut,
+	doughnut: doughnut,
 //	horizontalBar: horizontalBar,
 	line: line,
 //	polarArea: polarArea,
