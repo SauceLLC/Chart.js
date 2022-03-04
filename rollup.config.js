@@ -67,4 +67,35 @@ module.exports = [{
         format: 'umd',
         indent: false,
     }
+}, {
+    input,
+    plugins: [
+        nodeResolve(),
+        commonjs(),
+        stylesheet({
+            extract: true
+        }),
+        terser({
+            ecma: 6,
+            keep_classnames: true,
+            keep_fnames: true,
+            mangle: false,
+            compress: false,
+            format: {
+                beautify: true,
+                indent_level: 4, // use my fork of terser cmdline to replace with tabs
+                comments: false,
+                keep_numbers: true,
+                quote_style: 3, // use orig
+                preamble: banner,
+                braces: true,
+            }
+        })
+    ],
+    output: {
+        name: 'Chart',
+        file: 'dist/Chart.pretty.js',
+        format: 'umd',
+        indent: false,
+    }
 }];
